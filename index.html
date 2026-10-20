@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Focus Slides</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage"></div>
+  <div class="veil"></div>
+
+  <button id="ring" class="ring" aria-label="Timer. Click to toggle break mode">
+    <svg viewBox="0 0 80 80" aria-hidden="true">
+      <circle class="track" cx="40" cy="40" r="36"></circle>
+      <circle id="arc" class="arc" cx="40" cy="40" r="36"></circle>
+    </svg>
+    <span id="clock">25:00</span>
+  </button>
+  <p id="cap" class="cap" hidden>Break mode</p>
+
+  <nav id="bar" class="bar" aria-label="Controls">
+    <button id="play" class="primary">Start</button>
+    <button id="reset">Reset</button>
+    <button id="theme">Light mode</button>
+    <button id="full">Fullscreen</button>
+    <button id="min">Minimize</button>
+    <button id="gear">Settings</button>
+  </nav>
+
+  <section id="break" class="break" hidden>
+    <canvas id="graph"></canvas>
+    <div class="break-hud">
+      <p class="hint">Double-click empty space to add a bubble. Double-click a bubble to edit / categorize. Shift-drag to link. Right-click to remove.</p>
+      <div class="break-actions">
+        <button id="breakBack" class="primary">Return to Timer</button>
+      </div>
+    </div>
+    <div id="namerBox" class="namer-box" hidden>
+      <input id="namer" class="namer" maxlength="32" aria-label="Bubble name" placeholder="Node title...">
+      <div class="tag-selector" id="tagSelector">
+        <button type="button" class="tag-btn active" data-cat="idea">Idea</button>
+        <button type="button" class="tag-btn" data-cat="distraction">Distraction</button>
+        <button type="button" class="tag-btn" data-cat="task">Next Task</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Complete Session Overlay -->
+  <section id="complete" class="complete-overlay" hidden>
+    <div class="complete-card">
+      <span class="complete-badge">Session Completed</span>
+      <h2 id="completeDuration">25 minutes of focus</h2>
+      <p id="completeMsg">Great work staying on track! Take a moment to breathe.</p>
+      <div class="complete-actions">
+        <button id="btnBreak" class="primary">Take a Break</button>
+        <button id="btnAgain">Focus Again</button>
+        <button id="btnFinish">Finish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Drawer/Modal -->
+  <aside id="statsPanel" class="panel stats-panel" aria-label="Focus Statistics">
+    <div class="panel-header">
+      <h2>Focus Statistics</h2>
+      <button id="sCloseStats" class="icon-btn" aria-label="Close stats">&times;</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-num" id="stCompleted">0</span>
+        <span class="stat-lbl">Completed</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="stTotalMin">0m</span>
+        <span class="stat-lbl">Total Focus</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="stTodayMin">0m</span>
+        <span class="stat-lbl">Today</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" id="stWeekMin">0m</span>
+        <span class="stat-lbl">This Week</span>
+      </div>
+    </div>
+    <div class="stats-history-section">
+      <h3>Recent Sessions</h3>
+      <ul id="stHistoryList" class="stats-history-list">
+        <li class="history-empty">No sessions recorded yet</li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Shortcuts Modal -->
+  <div id="shortcutsModal" class="shortcuts-modal" hidden>
+    <div class="shortcuts-card">
+      <div class="shortcuts-header">
+        <h2>Keyboard Shortcuts</h2>
+        <button id="closeShortcuts" class="icon-btn" aria-label="Close shortcuts">&times;</button>
+      </div>
+      <div class="shortcuts-list">
+        <div class="shortcut-row"><kbd>Space</kbd><span>Start / Pause timer</span></div>
+        <div class="shortcut-row"><kbd>B</kbd><span>Toggle Break mode (Bubble map)</span></div>
+        <div class="shortcut-row"><kbd>F</kbd><span>Toggle Fullscreen</span></div>
+        <div class="shortcut-row"><kbd>T</kbd><span>Toggle Dark / Light theme</span></div>
+        <div class="shortcut-row"><kbd>S</kbd><span>Toggle Settings</span></div>
+        <div class="shortcut-row"><kbd>?</kbd><span>Toggle Keyboard Shortcuts</span></div>
+        <div class="shortcut-row"><kbd>Esc</kbd><span>Close dialog, modal, or alarm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <aside id="panel" class="panel" aria-label="Settings">
+    <div class="panel-header">
+      <h2>Settings</h2>
+      <button id="bCloseTop" class="icon-btn" aria-label="Close settings">&times;</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Timer</h3>
+      <label>Focus length (minutes)<input id="sFocus" type="number" min="1" max="180"></label>
+      <button id="bOpenStats" class="subtle-btn">View Focus Statistics</button>
+      <button id="bOpenShortcuts" class="subtle-btn">Keyboard Shortcuts Guide (?)</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Atmosphere & Background</h3>
+      <label>Slide collection to play
+        <select id="sSlideSource">
+          <option value="combined">Combined (Default + Custom)</option>
+          <option value="default">Default images only</option>
+          <option value="custom">Custom images only</option>
+        </select>
+      </label>
+      <label>Atmosphere preset
+        <select id="sPreset">
+          <option value="default">Default</option>
+          <option value="minimal">Minimal Dark</option>
+          <option value="rainy">Rainy Window</option>
+          <option value="space">Deep Space</option>
+          <option value="forest">Forest Calm</option>
+        </select>
+      </label>
+      <label>Dimming (dark overlay)
+        <input id="sDim" type="range" min="0" max="0.8" step="0.05">
+      </label>
+      <label>Blur intensity
+        <input id="sBlur" type="range" min="0" max="20" step="1">
+      </label>
+      <label class="row"><input id="sShuffle" type="checkbox"> Shuffle slides</label>
+      <label>Change picture every (seconds)<input id="sSlide" type="number" min="3" max="120"></label>
+      <label>Picture animation
+        <select id="sTrans"><option value="drift">Drift (fade and slow zoom)</option><option value="wipe">Wipe</option></select>
+      </label>
+    </div>
+
+    <div class="settings-section">
+      <h3>Alarm & Notification</h3>
+      <label class="row"><input id="sSound" type="checkbox"> Alarm sound</label>
+      <label>Alarm volume<input id="sVol" type="range" min="0" max="1" step="0.05"></label>
+      <label>Message on the alarm<input id="sMsg" type="text" maxlength="80"></label>
+    </div>
+
+    <div class="btns">
+      <button id="bAddImages" class="primary">+ Add pictures</button>
+      <button id="bTest">Test alarm</button>
+      <button id="bFolder">Open custom folder</button>
+      <button id="bReload">Reload images</button>
+    </div>
+    <p class="note" id="slideStatusNote">Add pictures here to play them alongside or separately from default images.</p>
+    <button id="bClose" class="primary">Close</button>
+  </aside>
+
+  <section id="alarm" class="alarm" hidden>
+    <img id="alarmBg" class="bg" alt="">
+    <figure>
+      <img id="alarmImg" alt="">
+      <figcaption>
+        <h1>Time's up</h1>
+        <p id="alarmMsg"></p>
+        <div class="btns"><button id="again" class="primary">Another round</button><button id="stop">I'm done</button></div>
+      </figcaption>
+    </figure>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
